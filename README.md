@@ -28,7 +28,7 @@ Using the **Bellabeat Fitness Tracker dataset**, this project explores:
 
 - **R & RStudio**  
 - **RMarkdown** for report generation  
-- Packages: `tidyverse`, `lubridate`, `ggplot2`, `dplyr`  
+- Packages: `tidyverse`, `lubridate`, `ggplot2`, `dplyr`, `here`  
 
 ---
 
@@ -38,6 +38,9 @@ Using the **Bellabeat Fitness Tracker dataset**, this project explores:
 |------|--------------|
 | `Bellabeat_Marketing_Strategy_Analysis.Rmd` | RMarkdown source code |
 | `Bellabeat_Marketing_Strategy_Analysis.html` | Knitted report (open in browser to view) |
+| `dailyActivity_merged.csv` | CSV (Comma-Seperated Values) File |
+| `sleepDay_merged.csv` | CSV (Comma-Seperated Values) File |
+| `weightLogInfo_merged.csv` | CSV (Comma-Seperated Values) File |
 | `README.md` | Project overview and documentation |
 
 ---
