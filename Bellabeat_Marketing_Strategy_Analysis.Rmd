@@ -1,0 +1,175 @@
+---
+title: "Bellabeat Marketing Strategy Analysis"
+author: "Sage Evans"
+date: "2025-10-12"
+output: html_document
+---
+
+## Introduction: Business Task and Scope
+The objective of this analysis is to examine public smart device usage data (FitBit Fitness Tracker Data) to identify key consumer behavior trends. These insights will be used to develop three high-level marketing strategy recommendations for the Bellabeat executive team, focusing on optimizing their product value and increasing customer engagement.
+
+## 1. Prepare & Process: Data Cleaning and Limitations
+
+### 1.1 Data Source and Limitations
+
+The analysis relies on the FitBit Fitness Tracker Data from Kaggle, covering 30 users over one month.
+
+***Critical Limitation:*** The small sample size (30 users) also means these findings are indicative, not conclusive, for Bellabeat's target demographic.
+
+### 1.2 R Code: Data Loading, Cleaning, and Joining
+
+The following code loads the required CSV files, cleans duplicate entries, uses robust date formatting to ensure a successful join, and creates the final analysis table.
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(here) 
+
+# Load the three key CSV files
+daily_activity <- read_csv(here::here("dailyActivity_merged.csv"))
+sleep_day <- read_csv(here::here("sleepDay_merged.csv"))
+
+# Remove Duplicates and Standardize Dates (using the successful robust code)
+sleep_day <- sleep_day %>% 
+  distinct(Id, SleepDay, .keep_all = TRUE) 
+
+daily_activity <- daily_activity %>%
+  distinct(Id, ActivityDate, .keep_all = TRUE) 
+
+# Fix date formats to ensure successful joining (essential step)
+daily_activity <- daily_activity %>%
+  mutate(
+    ActivityDate = as_date(parse_date_time(ActivityDate, orders = c("m/d/y", "y-m-d H:M:S")))
+  )
+
+sleep_day <- sleep_day %>%
+  mutate(
+    SleepDay = as_date(parse_date_time(SleepDay, orders = c("m/d/y", "y-m-d H:M:S")))
+  )
+
+# Join Data (LEFT_JOIN preserves all activity data, even if sleep data is missing)
+bellabeat_data <- daily_activity %>%
+  left_join(sleep_day, by = c("Id" = "Id", "ActivityDate" = "SleepDay"))
+
+# Final Transformation: Create Day of Week column
+bellabeat_data <- bellabeat_data %>%
+  mutate(day_of_week = wday(ActivityDate, label = TRUE))
+
+# Final Check (Optional: Print glimpse to show structure)
+# glimpse(bellabeat_data)
+```
+
+## 2. Analyze & Share: Key Findings and Visualizations
+
+### 2.1 Trend 1: User Engagement Segmentation
+***Finding:*** The core user base is highly engaged. 64% of the sample (29 users) were classified as High Engagement (Daily Users). This valuable segment should be leveraged for organic growth.
+
+```{r}
+# Code to generate the user_segmentation_plot data frame
+user_activity_frequency <- bellabeat_data %>%
+  group_by(Id) %>%
+  summarise(total_days_logged = n_distinct(ActivityDate))
+
+user_segmentation_plot <- user_activity_frequency %>%
+  mutate(
+    usage_group = case_when(
+      total_days_logged >= 25 ~ "High Engagement (Daily Users)",
+      total_days_logged >= 10 ~ "Medium Engagement (Intermittent)",
+      TRUE ~ "Low Engagement (Casual/Dropouts)"
+    )
+  ) %>%
+  group_by(usage_group) %>%
+  summarise(User_Count = n())
+
+# Visualization Code
+ggplot(data = user_segmentation_plot, aes(x = usage_group, y = User_Count, fill = usage_group)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Low Engagement (Casual/Dropouts)" = "lightcoral", 
+                               "Medium Engagement (Intermittent)" = "cornflowerblue", 
+                               "High Engagement (Daily Users)" = "seagreen")) +
+  labs(
+    title = "User Engagement Levels (Daily Logging Consistency)",
+    subtitle = "The majority of the sample (64%) are highly consistent users.",
+    x = "User Segment",
+    y = "Number of Users"
+  ) +
+  theme_minimal() +
+  coord_flip()
+```
+
+### 2.2 Trend 2: Dominant Sedentary Behavior
+***Finding:*** Users are sedentary for an extreme duration, confirming the need for anti-inactivity features.
+***Result:*** The average user logs 991 minutes (16.5 hours) of sedentary time daily.
+
+```{r}
+# Code to generate the activity_minutes_long data frame
+activity_minutes_summary <- bellabeat_data %>%
+  summarise(
+    Avg_Sedentary = mean(SedentaryMinutes, na.rm = TRUE),
+    Avg_LightlyActive = mean(LightlyActiveMinutes, na.rm = TRUE),
+    Avg_FairlyActive = mean(FairlyActiveMinutes, na.rm = TRUE),
+    Avg_VeryActive = mean(VeryActiveMinutes, na.rm = TRUE)
+  )
+
+activity_minutes_long <- activity_minutes_summary %>%
+  pivot_longer(everything(), names_to = "Activity_Type", values_to = "Avg_Minutes")
+
+# Visualization Code
+ggplot(activity_minutes_long, aes(x = Activity_Type, y = Avg_Minutes, fill = Activity_Type)) +
+  geom_col() +
+  scale_fill_manual(values = c("Avg_Sedentary" = "darkred", "Avg_LightlyActive" = "goldenrod", 
+                               "Avg_FairlyActive" = "steelblue", "Avg_VeryActive" = "seagreen")) +
+  labs(
+    title = "Average Minutes Spent in Activity States (Daily)",
+    subtitle = "Sedentary time (991 min) is the dominant user behavior.",
+    x = "Activity Type",
+    y = "Average Minutes"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+```
+
+### 2.3 Trend 3: Inconsistent Weekend Usage
+***Finding:*** Usage is highly inconsistent on weekends, with a major drop-off on Sunday.
+***Result:*** Steps are highest on Saturday (8153 steps) but drop to the lowest level on Sunday (6933 steps).
+
+```{r}
+# Code to generate the daily_trends_summary data frame
+daily_trends_summary <- bellabeat_data %>%
+  group_by(day_of_week) %>%
+  summarise(
+    Avg_Steps = mean(TotalSteps, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+# Visualization Code
+ggplot(data = daily_trends_summary, aes(x = day_of_week, y = Avg_Steps, fill = day_of_week)) +
+  geom_bar(stat = "identity", fill = "aquamarine4") +
+  labs(
+    title = "Average Daily Steps by Day of the Week",
+    subtitle = "Activity drops significantly on Sunday, the lowest day of the week.",
+    x = "Day of the Week",
+    y = "Average Steps (Per Day)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+## 3. Act: High-Level Recommendations
+
+The analysis indicates that Bellabeat should shift its strategy from acquiring "fitness enthusiasts" to retaining and leveraging its highly consistent user base by focusing on anti-inactivity features.
+
+***Recommendation 1: Leverage the Engaged Majority for Organic Growth***
+Rationale: The 64% High Engagement group is Bellabeat's strongest asset. Rewarding them drives valuable word-of-mouth marketing.
+
+***Action:*** Launch a "Bellabeat Sisterhood" Referral Program. Reward daily loggers with exclusive content or product accessories for successfully referring new paying customers. This turns loyal users into credible marketing agents.
+
+***Recommendation 2: Relaunch Leaf Messaging as "Inactivity Coach"***
+Rationale: The 991 minutes of sedentary time is the primary health problem the product is solving.
+
+***Action:*** Market the Bellabeat Leaf's inactivity alert feature as its core value. Content should focus on promoting "micro-movements" and reducing sedentary time, positioning the Leaf as a daily behavioral coach rather than a workout tracker.
+
+***Recommendation 3: Introduce a "Sunday Reset" Consistency Campaign***
+Rationale: The sharp drop in steps on Sunday suggests a lapse in routine and motivation, making it the highest risk day for eventual device abandonment.
+
+***Action:*** Implement an automated in-app and email campaign called the "Sunday Reset." Prompt users to set a simple, low-effort wellness goal for Sunday (e.g., a short walk or a meditation session) to stabilize weekly engagement and prevent the Monday rush from being overwhelming.
