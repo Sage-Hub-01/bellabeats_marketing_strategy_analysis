@@ -28,7 +28,11 @@ Using the **Bellabeat Fitness Tracker dataset**, this project explores:
 
 - **R & RStudio**  
 - **RMarkdown** for report generation  
-- Packages: `tidyverse`, `lubridate`, `ggplot2`, `dplyr`, `here`  
+- Packages: `tidyverse`, `lubridate`, `ggplot2`, `dplyr`, `here`
+
+- **Tableau**
+**View the Interactive Dashboard on Tableau Public**
+[Bellabeat Growth Dashboard](https://public.tableau.com/views/BellabeatGrowthStrategy/Dashboard1?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
 
 ---
 
