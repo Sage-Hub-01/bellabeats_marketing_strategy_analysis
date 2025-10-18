@@ -71,7 +71,4 @@ Using the **Bellabeat Fitness Tracker dataset**, this project explores:
 _Data Analyst in Training_  
 Passionate about transforming data into actionable insights that drive smarter decisions.  
 
----
-
-### 🌐 View the Project Online (Optional)
-If you enable **GitHub Pages**, your HTML report can be viewed directly online here:  
+--- 
